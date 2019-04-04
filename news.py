@@ -31,9 +31,9 @@ x_test_tfidf = vec.transform(news_test.data)
 
 
 # Parameters
-learning_rate = 0.1
+learning_rate = 0.01
 num_steps = 1
-batch_size = 64
+batch_size = 128
 display_step = 100
 
 # Network Parameters
@@ -67,6 +67,7 @@ def neural_net(x):
     layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
     # Output fully connected layer with a neuron for each class
     out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
+
     return out_layer
 
 # Construct model
@@ -74,8 +75,22 @@ logits = neural_net(X)
 prediction = tf.nn.softmax(logits)
 
 # Define loss and optimizer
-loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
+loss_op = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(
     logits=logits, labels=Y))
+
+# def loss_op_fix(logits, labels):
+#     loss_op = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(
+#         logits=logits, labels=labels))
+#
+#     tf.is_nan
+#
+#     for i in loss_op:
+#         if np.isnan(i) is True:
+#             i = 0
+#     return(loss_op)
+#
+# loss_op = loss_op_fix(logits, Y)
+
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
 train_op = optimizer.minimize(loss_op)
 
@@ -85,6 +100,7 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 # Initialize the variables (i.e. assign their default value)
 init = tf.global_variables_initializer()
+
 
 
 # Start training
@@ -115,6 +131,9 @@ with tf.Session() as sess:
                       "{:.3f}".format(acc))
 
     print("Optimization Finished!")
+
+
+    ### NOW THE TEST SET NEEDS TO BE BATCHED UP!
 
     print("Testing Accuracy:", \
           sess.run(accuracy, feed_dict={X: x_test_tfidf,
