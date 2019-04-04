@@ -34,8 +34,8 @@ x_test_tfidf = normalize(x_test_tfidf, norm='l1', axis=1)
 
 
 # Parameters
-learning_rate = 0.0001
-num_steps = 10
+learning_rate = 0.00001
+num_steps = 1
 batch_size = 128
 display_step = 100
 keep_prob = 0.5
@@ -106,38 +106,26 @@ def neural_net(x):
 logits = neural_net(X)
 prediction = tf.nn.softmax(logits)
 
+
 # Define loss and optimizer
-# loss_op = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(
-#     logits=logits, labels=Y))
-#
-# loss_op = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(
-#     logits=logits, labels=Y))
-#
-# loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=Y))
-#
+
+logits = tf.add(logits, 1e-6)
+
+softcross = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=Y)
 
 
-def loss_op_fix(logits, labels):
+loss_op = tf.reduce_mean(tf.boolean_mask(logits, tf.logical_not(tf.is_nan(logits))))
 
-    logits = tf.clip_by_value(logits, clip_value_min=0.00001, clip_value_max=1)
-
-    loss_op = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(
-        logits=logits, labels=labels))
-
-
-    loss_op = tf.clip_by_value(loss_op, clip_value_min=0.0001, clip_value_max=10000)
-
-    # w = tf.where(tf.is_nan(X), tf.ones_like(X) * 0, X);  # if w is nan use 1 * NUMBER else use element in w
-    #
-    # for i in loss_op:
-    #     if np.isnan(i) is True:
-    #         i = 0
-    return(loss_op)
-
-loss_op = loss_op_fix(logits, Y)
+# loss_op = tf.add(loss_op, 1e-6)
 
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
-train_op = optimizer.minimize(loss_op)
+gvs = optimizer.compute_gradients(loss_op)
+capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in gvs]
+train_op = optimizer.apply_gradients(capped_gvs)
+
+#
+# optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+# train_op = optimizer.minimize(loss_op)
 
 # Evaluate model
 correct_pred = tf.equal(tf.argmax(prediction, 1), tf.argmax(Y, 1))
@@ -146,12 +134,15 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 # Initialize the variables (i.e. assign their default value)
 init = tf.global_variables_initializer()
 
-
+from tensorflow.python import debug as tf_debug
 
 # Start training
 with tf.Session() as sess:
     # Run the initializer
     sess.run(init)
+
+    # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+    # sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
 
     for step in range(1, num_steps + 1):
 
@@ -174,16 +165,17 @@ with tf.Session() as sess:
                 print("Step " + str(step) + ", Minibatch " + str(index) + " Loss= " + \
                       "{:.4f}".format(loss) + ", Training Accuracy= " + \
                       "{:.3f}".format(acc))
-        print("Step Completed...")
+        print("Step Completed..." + "Mean Accuracy:")
 
     print("Optimization Finished!")
 
 
     ### NOW THE TEST SET NEEDS TO BE BATCHED UP!
 
+    test_accs = list()
+
     for index, offset in enumerate(range(0, x_test_tfidf.shape[0], batch_size)):
 
-        test_accs = list()
 
         batch_x = x_test_tfidf[offset: offset + batch_size, ]
         batch_x = batch_x.todense()
