@@ -3,7 +3,7 @@ import tensorflow as tf
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 
-categories = ['alt.atheism', 'soc.religion.christian','comp.graphics', 'sci.med']
+categories = ['alt.atheism', 'soc.religion.christian', 'comp.graphics', 'sci.med']
 
 
 news_train = fetch_20newsgroups(subset='train', categories=categories)  # getting data
