@@ -34,15 +34,15 @@ x_test_tfidf = normalize(x_test_tfidf, norm='l1', axis=1)
 
 
 # Parameters
-learning_rate = 0.001
-num_steps = 1
+learning_rate = 0.0001
+num_steps = 10
 batch_size = 128
 display_step = 100
 keep_prob = 0.5
 
 # Network Parameters
-n_hidden_1 = 512 # 1st layer number of neurons
-n_hidden_2 = 256 # 2nd layer number of neurons
+n_hidden_1 = 1024 # 1st layer number of neurons
+n_hidden_2 = 512 # 2nd layer number of neurons
 num_input = 35788 # for each word in our dictionary
 num_classes = len(categories)
 
@@ -86,20 +86,20 @@ def neural_net(x):
     layer_1_f = tf.nn.relu(layer_1_d) # activation with relu
 
     # Hidden fully connected layer with 256 neurons
-    layer_2 = tf.add(tf.matmul(layer_1_d, weights['h2']), biases['b2'])
+    layer_2 = tf.add(tf.matmul(layer_1_f, weights['h2']), biases['b2'])
     layer_2_b = tf.layers.batch_normalization(layer_2)
     layer_2_d = tf.nn.dropout(layer_2_b, keep_prob)
     layer_2_f = tf.nn.relu(layer_2_d)
 
     # Output fully connected layer with a neuron for each class
-    out_layer = tf.nn.relu(tf.matmul(layer_2_d, weights['out']) + biases['out'])
+    out_layer = tf.nn.relu(tf.matmul(layer_2_f, weights['out']) + biases['out'])
     out_layer_b = tf.layers.batch_normalization(out_layer)
-    out_layer_d = tf.nn.dropout(out_layer, keep_prob)
+    out_layer_d = tf.nn.dropout(out_layer_b, keep_prob)
     out_layer_f = tf.nn.relu(out_layer_d)
 
     # out_layer_f = tf.clip_by_value(out_layer, clip_value_min=0.00001, clip_value_max=1)
 
-    return out_layer
+    return out_layer_f
 
 
 # Construct model
@@ -107,9 +107,9 @@ logits = neural_net(X)
 prediction = tf.nn.softmax(logits)
 
 # Define loss and optimizer
-loss_op = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(
-    logits=logits, labels=Y))
-
+# loss_op = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(
+#     logits=logits, labels=Y))
+#
 # loss_op = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(
 #     logits=logits, labels=Y))
 #
@@ -117,21 +117,24 @@ loss_op = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(
 #
 
 
-# def loss_op_fix(logits, labels):
-#
-#     logits = tf.clip_by_value(logits, clip_value_min=0.00001, clip_value_max=1)
-#
-#     loss_op = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(
-#         logits=logits, labels=labels))
-#
-#     # w = tf.where(tf.is_nan(X), tf.ones_like(X) * 0, X);  # if w is nan use 1 * NUMBER else use element in w
-#     #
-#     # for i in loss_op:
-#     #     if np.isnan(i) is True:
-#     #         i = 0
-#     return(loss_op)
-#
-# loss_op = loss_op_fix(logits, Y)
+def loss_op_fix(logits, labels):
+
+    logits = tf.clip_by_value(logits, clip_value_min=0.00001, clip_value_max=1)
+
+    loss_op = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(
+        logits=logits, labels=labels))
+
+
+    loss_op = tf.clip_by_value(loss_op, clip_value_min=0.0001, clip_value_max=10000)
+
+    # w = tf.where(tf.is_nan(X), tf.ones_like(X) * 0, X);  # if w is nan use 1 * NUMBER else use element in w
+    #
+    # for i in loss_op:
+    #     if np.isnan(i) is True:
+    #         i = 0
+    return(loss_op)
+
+loss_op = loss_op_fix(logits, Y)
 
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
 train_op = optimizer.minimize(loss_op)
@@ -164,7 +167,7 @@ with tf.Session() as sess:
         # Run optimization op (backprop)
             sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
 
-            if step % display_step == 0 or step == 1:
+            if step % display_step == 0 or step == 1 or True:
                 # Calculate batch loss and accuracy
                 loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x,
                                                                      Y: batch_y})
@@ -178,6 +181,26 @@ with tf.Session() as sess:
 
     ### NOW THE TEST SET NEEDS TO BE BATCHED UP!
 
-    print("Testing Accuracy:", \
-          sess.run(accuracy, feed_dict={X: x_test_tfidf,
-                                        Y: y_test}))
+    for index, offset in enumerate(range(0, x_test_tfidf.shape[0], batch_size)):
+
+        test_accs = list()
+
+        batch_x = x_test_tfidf[offset: offset + batch_size, ]
+        batch_x = batch_x.todense()
+        batch_x = np.asarray(batch_x)
+
+        batch_y = y_test[offset: offset + batch_size]
+
+        # Run optimization op (backprop)
+        sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
+
+        # Calculate batch loss and accuracy
+        loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x,
+                                                             Y: batch_y})
+        print("Minibatch " + str(index) + " Loss= " + \
+              "{:.4f}".format(loss) + ", Testing Accuracy= " + \
+              "{:.3f}".format(acc))
+
+        test_accs.append(acc)
+
+    print("Testing Accuracy:", np.mean(test_accs))
