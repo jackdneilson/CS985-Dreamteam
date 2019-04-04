@@ -3,7 +3,7 @@ import tensorflow as tf
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 
-categories = ['alt.atheism', 'soc.religion.christian', 'comp.graphics', 'sci.med'] # this will be all 20 categories, just 4 for simplcity
+categories = ['alt.atheism', 'soc.religion.christian','comp.graphics', 'sci.med'] # subcat for quick build
 
 
 news_train = fetch_20newsgroups(subset='train', categories=categories)  # getting data
@@ -13,29 +13,26 @@ news_test = fetch_20newsgroups(subset='test', categories=categories)
 y_train, y_test = news_train.target, news_test.target  # labels
 
 
+y_train = tf.keras.utils.to_categorical(y_train, len(categories)) # not sure if want softmax here?
+y_test = tf.keras.utils.to_categorical(y_test, len(categories))
+
+
+# y_train = tf.reshape(y_train, [len(news_train.data), len(categories)])
+# y_test = tf.reshape(y_test, [len(news_test.data), len(categories)])
+
+
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 vec = TfidfVectorizer(binary=True, use_idf=True)  # Turning to term frequency inverse doc freq
 x_train_tfidf = vec.fit_transform(news_train.data)
 x_test_tfidf = vec.transform(news_test.data)
 
-# x_train_tfidf = np.asarray(x_train_tfidf) # numpy array, not sure
-# x_test_tfidf = np.asarray(x_test_tfidf)
 
 
-def convert_sparse_matrix_to_sparse_tensor(X):
-    # sparse matrix can't be input to tensors I think?
-    coo = X.tocoo()
-    indices = np.mat([coo.row, coo.col]).transpose()
-    output = tf.SparseTensorValue(indices, coo.data, coo.shape)
-    return (output)
-
-
-x_train_tfidf = convert_sparse_matrix_to_sparse_tensor(x_train_tfidf)
-x_test_tfidf = convert_sparse_matrix_to_sparse_tensor(x_test_tfidf)
 
 # Parameters
 learning_rate = 0.1
-num_steps = 10
+num_steps = 1
 batch_size = 64
 display_step = 100
 
@@ -89,11 +86,6 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 # Initialize the variables (i.e. assign their default value)
 init = tf.global_variables_initializer()
 
-#
-# x_train_tfidf = tf.sparse.to_dense(x_train_tfidf)
-# x_test_tfidf = tf.sparse.to_dense(x_test_tfidf)
-#
-
 
 # Start training
 with tf.Session() as sess:
@@ -103,15 +95,14 @@ with tf.Session() as sess:
     for step in range(1, num_steps + 1):
 
         for index, offset in enumerate(range(0, 35788, batch_size)):
-            sess.run(init)
-            # batch_x = x_train_tfidf.values[offset: offset + batch_size]
 
-            batch_x = x_train_tfidf[offset: offset + batch_size]  # HERE is the problem, can't batch up data
+            batch_x = x_train_tfidf[offset: offset + batch_size, ]
+            batch_x = batch_x.todense()
+            batch_x = np.asarray(batch_x)
 
-
-            #batch_x = np.asarray(batch_x)
-            # batch_x = tf.sparse.to_dense(batch_x)
             batch_y = y_train[offset: offset + batch_size]
+
+
         # Run optimization op (backprop)
             sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
 
@@ -119,7 +110,7 @@ with tf.Session() as sess:
                 # Calculate batch loss and accuracy
                 loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x,
                                                                      Y: batch_y})
-                print("Step " + str(step) + ", Minibatch Loss= " + \
+                print("Step " + str(step) + ", Minibatch " + str(index) + " Loss= " + \
                       "{:.4f}".format(loss) + ", Training Accuracy= " + \
                       "{:.3f}".format(acc))
 
