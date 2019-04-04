@@ -3,7 +3,7 @@ import tensorflow as tf
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 
-categories = ['alt.atheism', 'soc.religion.christian', 'comp.graphics', 'sci.med']
+categories = ['alt.atheism', 'soc.religion.christian', 'comp.graphics', 'sci.med'] # this will be all 20 categories, just 4 for simplcity
 
 
 news_train = fetch_20newsgroups(subset='train', categories=categories)  # getting data
