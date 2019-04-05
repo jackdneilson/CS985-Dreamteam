@@ -34,7 +34,7 @@ x_test_tfidf = normalize(x_test_tfidf, norm='l1', axis=1)
 
 
 # Parameters
-learning_rate = 0.00001
+learning_rate = 1e-20
 num_steps = 1
 batch_size = 128
 display_step = 100
@@ -63,39 +63,25 @@ biases = {
 
 
 # Create model
-# def neural_net(x):
-#     # Hidden fully connected layer with 256 neurons
-#     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-#     # Hidden fully connected layer with 256 neurons
-#     layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-#     # Output fully connected layer with a neuron for each class
-#     out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
-#
-#     # out_layer = tf.clip_by_value(out_layer, clip_value_min=0.00001, clip_value_max=1)
-#
-#     return out_layer
-
-
-# Create model
 def neural_net(x):
-    # Hidden fully connected layer with 256 neurons
+    # Hidden fully connected layer with n neurons
     # We first get weights and biases, then batch normalise, then dropout (or vice versa) and activate last
     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
     layer_1_b = tf.layers.batch_normalization(layer_1) # batch normalising
     layer_1_d = tf.nn.dropout(layer_1_b, keep_prob) # dropout
     layer_1_f = tf.nn.relu(layer_1_d) # activation with relu
 
-    # Hidden fully connected layer with 256 neurons
+    # Hidden fully connected layer with n neurons
     layer_2 = tf.add(tf.matmul(layer_1_f, weights['h2']), biases['b2'])
     layer_2_b = tf.layers.batch_normalization(layer_2)
     layer_2_d = tf.nn.dropout(layer_2_b, keep_prob)
     layer_2_f = tf.nn.relu(layer_2_d)
 
     # Output fully connected layer with a neuron for each class
-    out_layer = tf.nn.relu(tf.matmul(layer_2_f, weights['out']) + biases['out'])
+    out_layer = tf.matmul(layer_2_f, weights['out']) + biases['out']
     out_layer_b = tf.layers.batch_normalization(out_layer)
-    out_layer_d = tf.nn.dropout(out_layer_b, keep_prob)
-    out_layer_f = tf.nn.relu(out_layer_d)
+    #out_layer_d = tf.nn.dropout(out_layer_b, keep_prob) # no dropout for output layer
+    out_layer_f = tf.nn.relu(out_layer_b)
 
     # out_layer_f = tf.clip_by_value(out_layer, clip_value_min=0.00001, clip_value_max=1)
 
@@ -107,14 +93,17 @@ logits = neural_net(X)
 prediction = tf.nn.softmax(logits)
 
 
-# Define loss and optimizer
+# LOSS --- THIS IS WHERE THINGS ARE GOING WRONG --- NAN GRADIENTS 
 
 logits = tf.add(logits, 1e-6)
 
 softcross = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=Y)
 
+softcross = tf.clip_by_value(softcross, 0.001, 10000)
 
-loss_op = tf.reduce_mean(tf.boolean_mask(logits, tf.logical_not(tf.is_nan(logits))))
+loss_op = tf.reduce_mean(tf.boolean_mask(softcross, tf.logical_not(tf.is_nan(softcross))))
+
+# loss_op = tf.reduce_mean([tf.clip_by_value(grad, -1, 1), var) for grad, var in loss_op])
 
 # loss_op = tf.add(loss_op, 1e-6)
 
@@ -129,7 +118,11 @@ train_op = optimizer.apply_gradients(capped_gvs)
 
 # Evaluate model
 correct_pred = tf.equal(tf.argmax(prediction, 1), tf.argmax(Y, 1))
-accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+
+# correct_pred = tf.where(tf.is_nan(correct_pred), tf.zeros_like(correct_pred), correct_pred)
+
+thinger = tf.cast(correct_pred, tf.float32)
+accuracy = tf.reduce_mean(tf.boolean_mask(thinger, tf.logical_not(tf.is_nan(thinger))))
 
 # Initialize the variables (i.e. assign their default value)
 init = tf.global_variables_initializer()
@@ -141,12 +134,13 @@ with tf.Session() as sess:
     # Run the initializer
     sess.run(init)
 
-    # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+    # sess = tf_debug.LocalCLIDebugWrapperSession(sess) # for debugging, only through terminal
     # sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
 
     for step in range(1, num_steps + 1):
 
         for index, offset in enumerate(range(0, 35788, batch_size)):
+            ## indexes for out batch sizes, the range counts in leaps of batchsize
 
             batch_x = x_train_tfidf[offset: offset + batch_size, ]
             batch_x = batch_x.todense()
@@ -172,10 +166,10 @@ with tf.Session() as sess:
 
     ### NOW THE TEST SET NEEDS TO BE BATCHED UP!
 
-    test_accs = list()
+    test_accs = list() # to score for averaging
 
     for index, offset in enumerate(range(0, x_test_tfidf.shape[0], batch_size)):
-
+        ## indexes for out batch sizes, the range counts in leaps of batchsize
 
         batch_x = x_test_tfidf[offset: offset + batch_size, ]
         batch_x = batch_x.todense()
@@ -183,7 +177,7 @@ with tf.Session() as sess:
 
         batch_y = y_test[offset: offset + batch_size]
 
-        # Run optimization op (backprop)
+        # backpropagate 
         sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
 
         # Calculate batch loss and accuracy
