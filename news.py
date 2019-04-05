@@ -29,21 +29,21 @@ x_test_tfidf = vec.transform(news_test.data)
 
 
 from sklearn.preprocessing import normalize  # Normalising the x train and test
-x_train_tfidf = normalize(x_train_tfidf, norm='l1', axis=1)
-x_test_tfidf = normalize(x_test_tfidf, norm='l1', axis=1)
+x_train_tfidf = normalize(x_train_tfidf, norm='l2', axis=1)
+x_test_tfidf = normalize(x_test_tfidf, norm='l2', axis=1)
 
 
 # Parameters
-learning_rate = 1e-20
+learning_rate = 1e-6
 num_steps = 1
-batch_size = 128
+batch_size = 64
 display_step = 100
 keep_prob = 0.5
 
 # Network Parameters
-n_hidden_1 = 1024 # 1st layer number of neurons
-n_hidden_2 = 512 # 2nd layer number of neurons
-num_input = 35788 # for each word in our dictionary
+n_hidden_1 = 512 # 1st layer number of neurons
+n_hidden_2 = 256 # 2nd layer number of neurons
+num_input = x_train_tfidf.shape[1] # for each word in our dictionary
 num_classes = len(categories)
 
 # tf Graph input
@@ -62,7 +62,6 @@ biases = {
 }
 
 
-# Create model
 def neural_net(x):
     # Hidden fully connected layer with n neurons
     # We first get weights and biases, then batch normalise, then dropout (or vice versa) and activate last
@@ -80,73 +79,61 @@ def neural_net(x):
     # Output fully connected layer with a neuron for each class
     out_layer = tf.matmul(layer_2_f, weights['out']) + biases['out']
     out_layer_b = tf.layers.batch_normalization(out_layer)
-    #out_layer_d = tf.nn.dropout(out_layer_b, keep_prob) # no dropout for output layer
     out_layer_f = tf.nn.relu(out_layer_b)
-
-    # out_layer_f = tf.clip_by_value(out_layer, clip_value_min=0.00001, clip_value_max=1)
 
     return out_layer_f
 
+
+# def neural_net(x):
+#     # Hidden fully connected layer with 256 neurons
+#     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
+#     # layer_1 = tf.layers.batch_normalization(layer_1) # batch normalising
+#     # layer_1 = tf.nn.dropout(layer_1, 0.75)
+#     layer_1 = tf.nn.relu(layer_1)
+#     # Hidden fully connected layer with 256 neurons
+#     layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
+#     # layer_2 = tf.nn.relu(layer_2)
+#     # Output fully connected layer with a neuron for each class
+#     out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
+#     # out_layer = tf.nn.relu(out_layer)
+#     return out_layer
 
 # Construct model
 logits = neural_net(X)
 prediction = tf.nn.softmax(logits)
 
-
-# LOSS --- THIS IS WHERE THINGS ARE GOING WRONG --- NAN GRADIENTS 
-
-logits = tf.add(logits, 1e-6)
-
-softcross = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=Y)
-
-softcross = tf.clip_by_value(softcross, 0.001, 10000)
-
-loss_op = tf.reduce_mean(tf.boolean_mask(softcross, tf.logical_not(tf.is_nan(softcross))))
-
-# loss_op = tf.reduce_mean([tf.clip_by_value(grad, -1, 1), var) for grad, var in loss_op])
-
-# loss_op = tf.add(loss_op, 1e-6)
-
+#LOSS
+loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=Y))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
-gvs = optimizer.compute_gradients(loss_op)
-capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in gvs]
-train_op = optimizer.apply_gradients(capped_gvs)
+train_op = optimizer.minimize(loss_op)
 
-#
-# optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
-# train_op = optimizer.minimize(loss_op)
 
 # Evaluate model
 correct_pred = tf.equal(tf.argmax(prediction, 1), tf.argmax(Y, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
-# correct_pred = tf.where(tf.is_nan(correct_pred), tf.zeros_like(correct_pred), correct_pred)
-
-thinger = tf.cast(correct_pred, tf.float32)
-accuracy = tf.reduce_mean(tf.boolean_mask(thinger, tf.logical_not(tf.is_nan(thinger))))
-
-# Initialize the variables (i.e. assign their default value)
+# Initialize the variables
 init = tf.global_variables_initializer()
 
 from tensorflow.python import debug as tf_debug
 
-# Start training
+# TRAINING
 with tf.Session() as sess:
     # Run the initializer
     sess.run(init)
 
-    # sess = tf_debug.LocalCLIDebugWrapperSession(sess) # for debugging, only through terminal
+    # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
     # sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
 
     for step in range(1, num_steps + 1):
 
-        for index, offset in enumerate(range(0, 35788, batch_size)):
-            ## indexes for out batch sizes, the range counts in leaps of batchsize
+        for index, offset in enumerate(range(0, x_train_tfidf.shape[0], batch_size)):
 
             batch_x = x_train_tfidf[offset: offset + batch_size, ]
             batch_x = batch_x.todense()
             batch_x = np.asarray(batch_x)
 
-            batch_y = y_train[offset: offset + batch_size]
+            batch_y = y_train[offset: offset + batch_size, ]
 
 
         # Run optimization op (backprop)
@@ -166,18 +153,18 @@ with tf.Session() as sess:
 
     ### NOW THE TEST SET NEEDS TO BE BATCHED UP!
 
-    test_accs = list() # to score for averaging
+    test_accs = list()
 
     for index, offset in enumerate(range(0, x_test_tfidf.shape[0], batch_size)):
-        ## indexes for out batch sizes, the range counts in leaps of batchsize
+
 
         batch_x = x_test_tfidf[offset: offset + batch_size, ]
         batch_x = batch_x.todense()
         batch_x = np.asarray(batch_x)
 
-        batch_y = y_test[offset: offset + batch_size]
+        batch_y = y_test[offset: offset + batch_size,]
 
-        # backpropagate 
+        # Run optimization op (backprop)
         sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
 
         # Calculate batch loss and accuracy
@@ -190,3 +177,5 @@ with tf.Session() as sess:
         test_accs.append(acc)
 
     print("Testing Accuracy:", np.mean(test_accs))
+
+
