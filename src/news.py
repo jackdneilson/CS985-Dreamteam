@@ -24,8 +24,8 @@ def main(combination, learning_rate, epochs, batches, seed):
 
     print("Done!")
 
-def check_param_is_numeric(param, value):
 
+def check_param_is_numeric(param, value):
     try:
         value = float(value)
     except:
