@@ -2,18 +2,22 @@ from __future__ import absolute_import, division, print_function
 import argparse
 import tensorflow as tf
 import numpy as np
-import time
-
-##Logging
-tf.logging.set_verbosity(tf.logging.INFO)
+from datetime import datetime
+from time import time
 
 #Main neural network function
 def nn_network(combination, learning_rate, epochs, batches, seed):
-    start = time.time()
     tf.set_random_seed(seed)
-
+    np.random.seed(seed)
+    start = time()
+    
+	#Creates a callback for saving the model
     checkpoint_path = "mnist-{}-{}-{}-{}-{}.ckpt".format(combination,learning_rate,epochs,batches,seed)
-    cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True, verbose=1, period=1)
+    cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True, verbose=0, period=1)
+    
+	#Creates a callback that outputs logs to tensorboard
+    now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    tensorboard = tf.keras.callbacks.TensorBoard(log_dir="./logs/run-{}".format(now), write_graph=True, update_freq="batch")
     
     X_train, y_train, X_test, y_test = get_mnist_data()
     
@@ -24,9 +28,9 @@ def nn_network(combination, learning_rate, epochs, batches, seed):
     
     model.fit(X_train, y_train, batch_size=batches,
               epochs=epochs, verbose=1, validation_split=0.1,
-              shuffle="batch", callbacks = [cp_callback])
+              shuffle="batch", callbacks = [cp_callback, tensorboard])
     
-    end = time.time()
+    end = time()
     
     score = model.evaluate(X_test, y_test, verbose=0)
     
@@ -62,7 +66,7 @@ def build_model(combination, learning_rate):
     if combination == 2 or combination == 4:
         model = cnn(combination, model)
     
-    adam = tf.keras.optimizers.Adam(lr=learning_rate)
+    adam = tf.train.AdamOptimizer(learning_rate=learning_rate)    
     
     model.compile(loss=tf.keras.losses.sparse_categorical_crossentropy,
              optimizer=adam,
