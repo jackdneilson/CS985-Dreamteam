@@ -2,18 +2,46 @@ from __future__ import absolute_import, division, print_function
 import argparse
 import tensorflow as tf
 import numpy as np
-
+import time
 
 ##Logging
-##Saving the model
 tf.logging.set_verbosity(tf.logging.INFO)
 
-def mlp_network(combination, learning_rate, epochs, batches, seed):
+#Main neural network function
+def nn_network(combination, learning_rate, epochs, batches, seed):
+    start = time.time()
     tf.set_random_seed(seed)
 
     checkpoint_path = "mnist-{}-{}-{}-{}-{}.ckpt".format(combination,learning_rate,epochs,batches,seed)
     cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True, verbose=1, period=1)
     
+    X_train, y_train, X_test, y_test = get_mnist_data()
+    
+    if combination == 2 or combination == 4:
+        X_train, X_test = reshape_mnist_for_CNN(X_train, X_test)
+    
+    model = build_model(combination, learning_rate)
+    
+    model.fit(X_train, y_train, batch_size=batches,
+              epochs=epochs, verbose=1, validation_split=0.1,
+              shuffle="batch", callbacks = [cp_callback])
+    
+    end = time.time()
+    
+    score = model.evaluate(X_test, y_test, verbose=0)
+    
+    print("Test accuracy: {}%.".format(score[1]*100))
+    print("The model took {} minutes and {} seconds to train.".format(np.int32((end-start)//60), np.int32((end-start)%60)))
+
+#Function to reshape data to fit to a CNN
+def reshape_mnist_for_CNN(X_train, X_test):
+    X_train_reshaped = X_train.reshape(X_train.shape[0], 28, 28, 1)
+    X_test_reshaped = X_test.reshape(X_test.shape[0], 28, 28, 1)
+    
+    return X_train_reshaped, X_test_reshaped
+
+#Load and return the data with a split of 60,000 training instances and 10,000 testing instances
+def get_mnist_data():
     ((X_train, y_train), (X_test, y_test)) = tf.keras.datasets.mnist.load_data()
 
     X_train = X_train/np.float32(255)
@@ -22,42 +50,28 @@ def mlp_network(combination, learning_rate, epochs, batches, seed):
     X_test = X_test/np.float32(255)
     y_test = y_test.astype(np.int32)
     
+    return X_train, y_train, X_test, y_test
+
+#Build and return the correct model depending on the combination
+def build_model(combination, learning_rate):
+    model = tf.keras.Sequential()
+    
     if combination == 1 or combination == 3:
-        model = dnn(combination)
+        model = mlp(combination, model)
     
     if combination == 2 or combination == 4:
-        model, X_train, X_test = cnn(combination, X_train, X_test)
-    
-    model.summary()
+        model = cnn(combination, model)
     
     adam = tf.keras.optimizers.Adam(lr=learning_rate)
     
     model.compile(loss=tf.keras.losses.sparse_categorical_crossentropy,
              optimizer=adam,
-             metrics=['accuracy'])
+             metrics=['accuracy'])  
     
-    model.fit(X_train, y_train, batch_size=batches,
-              epochs=epochs, verbose=1, validation_split=0.1,
-              shuffle="batch", callbacks = [cp_callback])
+    return model
     
-    score = model.evaluate(X_test, y_test, verbose=0)
-    
-    print("Test accuracy: ", score[1])
-    
-    print("Restoring a model")
-    model1 = dnn(combination)
-    model1.load_weights(checkpoint_path)
-    model1.compile(loss=tf.keras.losses.sparse_categorical_crossentropy,
-             optimizer=adam,
-             metrics=['accuracy'])    
-    loss1, acc1 = model1.evaluate(X_test, y_test)
-    print("Restored model1, accuracy: {:5.2f}%".format(100*acc1))
-
-    
-    
-def dnn(combination):
-    model = tf.keras.Sequential()
-    
+#MLP network architecture
+def mlp(combination, model):
     model.add(tf.keras.layers.Flatten(input_shape=(28, 28)))
     model.add(tf.keras.layers.Dense(512, activation=tf.nn.relu))
     model.add(tf.keras.layers.Dense(256, activation=tf.nn.relu))
@@ -68,20 +82,11 @@ def dnn(combination):
 
     return model
 
-def cnn(combination, X_train, X_test):
-    if tf.keras.backend.image_data_format() == 'channels_first':
-        X_train_reshaped = X_train.reshape(X_train.shape[0], 1, 28, 28)
-        X_test_reshaped = X_test.reshape(X_test.shape[0], 1, 28, 28)
-        input_shape = (1, 28, 28)
-    else:
-        X_train_reshaped = X_train.reshape(X_train.shape[0], 28, 28, 1)
-        X_test_reshaped = X_test.reshape(X_test.shape[0], 28, 28, 1)
-        input_shape = (28, 28, 1)
-        
-    model = tf.keras.Sequential()
+#CNN network architecture
+def cnn(combination, model):
     model.add(tf.keras.layers.Conv2D(32, kernel_size=(3,3), 
                      activation=tf.nn.relu, 
-                     input_shape=input_shape))
+                     input_shape=(28, 28, 1)))
     model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2))) 
     model.add(tf.keras.layers.Conv2D(64, kernel_size=(3,3), 
                      activation=tf.nn.relu)) 
@@ -93,8 +98,23 @@ def cnn(combination, X_train, X_test):
     model.add(tf.keras.layers.Dropout(rate=0.2))
     model.add(tf.keras.layers.Dense(10, activation=tf.nn.softmax))
     
-    return model, X_train_reshaped, X_test_reshaped      
+    return model      
+
+#Method for restoring models
+def restore_model(checkpoint_path):
+    combination = np.int(checkpoint_path.split("-")[1])
+    learning_rate = np.float32(checkpoint_path.split("-")[2])
+    X_train, y_train, X_test, y_test = get_mnist_data()
     
+    if combination == 2 or combination == 4:
+        X_train, X_test = reshape_mnist_for_CNN(X_train, X_test)
+    
+    model = build_model(combination, learning_rate)
+    model.load_weights(checkpoint_path)  
+    score = model.evaluate(X_test, y_test)
+    print("Model restored! \nTest accuracy: {}%.".format(score[1]*100))
+
+#Checks if the input parameter is a float
 def check_param_is_float(param, value):
 
     try:
@@ -104,6 +124,7 @@ def check_param_is_float(param, value):
         quit(1)
     return value    
 
+#Checks if the input parameter is an integer
 def check_param_is_int(param, value):
     
     try:
@@ -111,7 +132,7 @@ def check_param_is_int(param, value):
     except: 
         print("{} must be integer".format(param))
         quit(1)
-    return value  
+    return value
 
 # 4 Combinations
 # Combination 1: MLP with 2 hidden layers
@@ -119,7 +140,12 @@ def check_param_is_int(param, value):
 # Combination 3: MLP with 3 hidden layers
 # Combination 4: CNN with 2 hidden layers
 
-#mlp_network(3,0.001,10,128,12345)
+# Run a neural network with the given parameters
+#nn_network(1,0.001,2,128,12345)
+
+#Restore the specified model and check the test accuracy
+#checkpoint_path = "mnist-1-0.001-2-128-12345.ckpt"
+#restore_model(checkpoint_path)    
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(description="Assignment Program")
@@ -137,4 +163,4 @@ if __name__ == "__main__":
     batches = check_param_is_int("batches", args.batches)
     seed = check_param_is_int("seed", args.seed)
 
-    mlp_network(combination, learning_rate, epochs, batches, seed)
+    nn_network(combination, learning_rate, epochs, batches, seed)
