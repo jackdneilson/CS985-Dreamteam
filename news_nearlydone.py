@@ -42,7 +42,7 @@ x_val_tfidf = normalize(x_val_tfidf, norm='l2', axis=1)
 
 # hyper-parameters
 learning_rate = 0.001
-num_epochs = 16
+num_epochs = 2
 batch_size = 64
 display_step = 1
 keep_prob = 0.5
@@ -118,6 +118,11 @@ log_dir = "logs/run-{}".format(now)
 # l = tf.summary.scalar('loss', tf_loss_ph)
 # a = tf.summary.scalar('accuracy', tf_accuracy_ph)
 
+
+l = tf.summary.scalar('loss', loss_op)  # for tensorboard
+a = tf.summary.scalar('accuracy', accuracy)
+
+
 with tf.Session() as sess:
     #run initialiser
     sess.run(init)
@@ -130,7 +135,9 @@ with tf.Session() as sess:
     train_loss = list()
     val_loss = list()
 
-    train_writer = tf.summary.FileWriter(log_dir, tf.get_default_graph())  # for summaries to tensorboard
+    train_writer = tf.summary.FileWriter(log_dir + '/train', tf.get_default_graph())  # for summaries to tensorboard
+
+    val_writer = tf.summary.FileWriter(log_dir + '/validation', tf.get_default_graph())
 
     saver = tf.train.Saver()  # to save iterations of the model and the final model
 
@@ -143,7 +150,7 @@ with tf.Session() as sess:
             batch_x = np.asarray(batch_x)
 
             batch_y = y_train[offset: offset + batch_size, ]
-            n_batches = x_train_tfidf.shape[0] / batch_size  # so we can see progress
+            n_batches = round(x_train_tfidf.shape[0] / batch_size)  # so we can see progress
 
             # backpropagate -- the weights optimise in train op
             sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
@@ -151,34 +158,29 @@ with tf.Session() as sess:
             # Calculate batch loss and accuracy
             loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x,
                                                                  Y: batch_y})
-            print("Epoch " + str(epoch) + ", Minibatch " + str(index) + " / " + str(n_batches) + " Loss= " + \
-                  "{:.4f}".format(loss) + ", Training Accuracy= " + \
+            print("Epoch " + str(epoch) + ", Minibatch " + str(index) + " / " + str(n_batches) + " Loss= " +
+                  "{:.4f}".format(loss) + ", Training Accuracy= " +
                   "{:.3f}".format(acc))
             train_acc.append(acc)
 
-            l = tf.summary.scalar('loss', loss_op)  # for tensorboard
-            a = tf.summary.scalar('accuracy', accuracy)
-
-
-            train_merged = tf.summary.merge_all()
+            train_merged = tf.summary.merge_all()  # for summaries
 
             if index % 10 == 0:
-                loss_summary, loss_t = sess.run([train_merged, l], feed_dict={X: batch_x, Y: batch_y})
-                acc_summmary, acc_t = sess.run([train_merged, a], feed_dict={X: batch_x, Y: batch_y})
+                acc_summmary = a.eval(feed_dict={X: batch_x, Y: batch_y})
+                loss_summary = l.eval(feed_dict={X: batch_x, Y: batch_y})
+                n = (epoch - 1) * n_batches + index  # so that tensorboard knows to plot chronologically
 
-                # acc_summmary = a.eval(feed_dict={X: batch_x, Y: batch_y})
-                # loss_summary = l.eval(feed_dict={X: batch_x, Y: batch_y})
+                train_writer.add_summary(loss_summary, n)
+                train_writer.add_summary(acc_summmary, n)
 
-                train_writer.add_summary(loss_summary, index)
-                train_writer.add_summary(acc_summmary, index)
-
-            if index % 30 == 0:
+            if index % 50 == 0:
                 # saving iterations of the model
                 save_path = saver.save(sess, "tmp/news_final.ckpt")
 
 
         print("Step Completed..." + "Mean Accuracy of Last Epoch:" + \
               str(np.mean(train_acc[-batch_size:])))
+
 
         #  Now for validation
         n_vals = round(x_val_tfidf.shape[0] / batch_size)
@@ -192,21 +194,24 @@ with tf.Session() as sess:
 
             loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x,
                                                                  Y: batch_y})
-            tf.summary.scalar('loss', loss)
-            tf.summary.scalar('accuracy', accuracy)
-            print("Step " + str(epoch) + ", Minibatch " + str(index) + " / " + str(n_vals) + " Loss= " + \
-                  "{:.4f}".format(loss) + ", Validation Accuracy= " + \
+
+            acc_summary = a.eval(feed_dict={X: batch_x, Y: batch_y})
+            loss_summary = l.eval(feed_dict={X: batch_x, Y: batch_y})
+
+            n = (epoch-1)*n_vals + index
+
+            val_writer.add_summary(loss_summary, n)
+            val_writer.add_summary(acc_summary, n)
+
+            print("Step " + str(epoch) + ", Minibatch " + str(index) + " / " + str(n_vals) + " Loss= " +
+                  "{:.4f}".format(loss) + ", Validation Accuracy= " +
                   "{:.3f}".format(acc))
             val_accs.append(acc)
-        print("Step Completed..." + "Mean Accuracy of Last Epoch:" + \
+        print("Step Completed..." + "Mean Accuracy of Last Epoch:" +
               str(np.mean(train_acc[-batch_size:])) + " Validation Accuracy: " + str(np.mean(val_accs[-3:])))
 
-        # if np.mean(val_accs) <= (np.mean(train_acc[-batch_size:]) * 0.8) and step >= 1:
-        #     print("Validation Accuracy too low, terminating...")
-        #     break
-
-
-        if epoch >= 2 and np.mean(val_accs[-n_vals:]) < (np.mean(val_accs[-2*n_vals:-n_vals])):
+        if epoch >= min_epochs and np.mean(val_accs[-n_vals:]) < (np.mean(val_accs[-2*n_vals:-n_vals])):
+            # early stopping if the validation accuracy decreases for a given epoch
             print("No Validation Improvement")
             break
 
@@ -220,6 +225,7 @@ with tf.Session() as sess:
     ### NOW THE TEST SET NEEDS TO BE BATCHED UP!
 
     test_accs = list()
+    n_tests = round(x_test_tfidf.shape[0] / batch_size)
 
     for index, offset in enumerate(range(0, x_test_tfidf.shape[0], batch_size)):
         batch_x = x_test_tfidf[offset: offset + batch_size, ]
@@ -231,19 +237,13 @@ with tf.Session() as sess:
         #  loss and accuracy -- no longer running the training operation, not changing weights
         loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x,
                                                              Y: batch_y})
-        print("Minibatch " + str(index) + " Loss= " + \
-              "{:.4f}".format(loss) + ", Testing Accuracy= " + \
+        print("Minibatch " + str(index) + " \ " + str(n_tests) + " Loss= " +
+              "{:.4f}".format(loss) + ", Testing Accuracy= " +
               "{:.3f}".format(acc))
 
         test_accs.append(acc)
 
     print("Testing Accuracy:", np.mean(test_accs))
-
-    # merged = tf.summary.merge_all()
-
-    # saver = tf.train.Saver()
-
-    # file_writer = tf.summary.FileWriter('./logs', sess.graph)
 
     save_path = saver.save(sess, "/tmp/news_final.ckpt")
     print("SAVED MODEL TO: %s" % save_path)
