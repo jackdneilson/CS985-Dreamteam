@@ -202,7 +202,7 @@ def network_one(learning_rate, epochs, batches):
                 print("No Validation Improvement")
                 break
 
-            # print("Would you like to continue training?.... 10 seconds to default continue...")
+            # print("Would you like to continue training?....")
             # answer = input('y/n')
             # if answer == 'n':
             #     break
