@@ -4,6 +4,8 @@ import tensorflow as tf
 import numpy as np
 from datetime import datetime
 from time import time
+from tensorflow.keras.utils import plot_model
+
 
 #Main neural network function
 def nn_network(combination, learning_rate, epochs, batches, seed):
@@ -11,17 +13,15 @@ def nn_network(combination, learning_rate, epochs, batches, seed):
     np.random.seed(seed)
     start = time()
     
-	#Creates a callback for saving the model
     checkpoint_path = "mnist-{}-{}-{}-{}-{}.ckpt".format(combination,learning_rate,epochs,batches,seed)
     cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True, verbose=0, period=1)
     
-	#Creates a callback that outputs logs to tensorboard
     now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
     tensorboard = tf.keras.callbacks.TensorBoard(log_dir="./logs/run-{}".format(now), write_graph=True, update_freq="batch")
     
     X_train, y_train, X_test, y_test = get_mnist_data()
     
-    if combination == 2 or combination == 4:
+    if combination == 1 or combination == 3:
         X_train, X_test = reshape_mnist_for_CNN(X_train, X_test)
     
     model = build_model(combination, learning_rate)
@@ -31,6 +31,8 @@ def nn_network(combination, learning_rate, epochs, batches, seed):
               shuffle="batch", callbacks = [cp_callback, tensorboard])
     
     end = time()
+    
+    plot_model(model, to_file='model.png')
     
     score = model.evaluate(X_test, y_test, verbose=0)
     
@@ -61,44 +63,42 @@ def build_model(combination, learning_rate):
     model = tf.keras.Sequential()
     
     if combination == 1 or combination == 3:
-        model = mlp(combination, model)
+        model = cnn(combination, model, activation=tf.nn.relu)
     
     if combination == 2 or combination == 4:
-        model = cnn(combination, model)
+        model = mlp(combination, model, activation=tf.nn.relu)
     
     adam = tf.train.AdamOptimizer(learning_rate=learning_rate)    
-    
     model.compile(loss=tf.keras.losses.sparse_categorical_crossentropy,
-             optimizer=adam,
-             metrics=['accuracy'])  
-    
+                  optimizer=adam,
+                  metrics=['accuracy'])      
     return model
     
 #MLP network architecture
-def mlp(combination, model):
+def mlp(combination, model, activation):
     model.add(tf.keras.layers.Flatten(input_shape=(28, 28)))
-    model.add(tf.keras.layers.Dense(512, activation=tf.nn.relu))
-    model.add(tf.keras.layers.Dense(256, activation=tf.nn.relu))
-    if combination == 3:
-        model.add(tf.keras.layers.Dense(128, activation=tf.nn.relu))
-    model.add(tf.keras.layers.Dropout(rate=0.8))
+    model.add(tf.keras.layers.Dense(512, activation=activation))
+    model.add(tf.keras.layers.Dense(256, activation=activation))
+    if combination == 4:
+        model.add(tf.keras.layers.Dense(128, activation=activation))
+    model.add(tf.keras.layers.Dropout(rate=0.2))
     model.add(tf.keras.layers.Dense(10, activation=tf.nn.softmax))
 
     return model
 
 #CNN network architecture
-def cnn(combination, model):
+def cnn(combination, model, activation):
     model.add(tf.keras.layers.Conv2D(32, kernel_size=(3,3), 
-                     activation=tf.nn.relu, 
+                     activation=activation, 
                      input_shape=(28, 28, 1)))
     model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2))) 
     model.add(tf.keras.layers.Conv2D(64, kernel_size=(3,3), 
-                     activation=tf.nn.relu)) 
+                     activation=activation)) 
     model.add(tf.keras.layers.AveragePooling2D(pool_size=(2,2)))
     model.add(tf.keras.layers.Flatten())
-    model.add(tf.keras.layers.Dense(128, activation=tf.nn.relu))
-    if combination == 4:
-        model.add(tf.keras.layers.Dense(128, activation=tf.nn.relu))
+    model.add(tf.keras.layers.Dense(128, activation=activation))
+    if combination == 3:
+        model.add(tf.keras.layers.Dense(128, activation=activation))
     model.add(tf.keras.layers.Dropout(rate=0.2))
     model.add(tf.keras.layers.Dense(10, activation=tf.nn.softmax))
     
@@ -110,7 +110,7 @@ def restore_model(checkpoint_path):
     learning_rate = np.float32(checkpoint_path.split("-")[2])
     X_train, y_train, X_test, y_test = get_mnist_data()
     
-    if combination == 2 or combination == 4:
+    if combination == 1 or combination == 3:
         X_train, X_test = reshape_mnist_for_CNN(X_train, X_test)
     
     model = build_model(combination, learning_rate)
@@ -139,16 +139,16 @@ def check_param_is_int(param, value):
     return value
 
 # 4 Combinations
-# Combination 1: MLP with 2 hidden layers
-# Combination 2: CNN with 1 hidden layer
-# Combination 3: MLP with 3 hidden layers
-# Combination 4: CNN with 2 hidden layers
+# Combination 1: CNN with 1 hidden layer
+# Combination 2: MLP with 2 hidden layers
+# Combination 3: CNN with 2 hidden layers
+# Combination 4: MLP with 3 hidden layers
 
 # Run a neural network with the given parameters
-#nn_network(1,0.001,2,128,12345)
+#nn_network(1, 0.005, 10, 64, 12345)
 
 #Restore the specified model and check the test accuracy
-#checkpoint_path = "mnist-1-0.001-2-128-12345.ckpt"
+#checkpoint_path = "mnist-4-0.001-20-32-12345.ckpt"
 #restore_model(checkpoint_path)    
 
 if __name__ == "__main__":
