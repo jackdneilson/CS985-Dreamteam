@@ -4,11 +4,10 @@ import tensorflow as tf
 import numpy as np
 from datetime import datetime
 from time import time
-from tensorflow.keras.utils import plot_model
 
 
 #Main neural network function
-def nn_network(combination, learning_rate, epochs, batches, seed):
+def network(combination, learning_rate, epochs, batches, seed):
     tf.set_random_seed(seed)
     np.random.seed(seed)
     start = time()
@@ -32,8 +31,7 @@ def nn_network(combination, learning_rate, epochs, batches, seed):
     
     end = time()
     
-    plot_model(model, to_file='model.png')
-    
+
     score = model.evaluate(X_test, y_test, verbose=0)
     
     print("Test accuracy: {}%.".format(score[1]*100))
@@ -63,10 +61,10 @@ def build_model(combination, learning_rate):
     model = tf.keras.Sequential()
     
     if combination == 1 or combination == 3:
-        model = cnn(combination, model, activation=tf.nn.relu)
+        model = network_one(combination, model, activation=tf.nn.relu)
     
     if combination == 2 or combination == 4:
-        model = mlp(combination, model, activation=tf.nn.relu)
+        model = network_two(combination, model, activation=tf.nn.relu)
     
     adam = tf.train.AdamOptimizer(learning_rate=learning_rate)    
     model.compile(loss=tf.keras.losses.sparse_categorical_crossentropy,
@@ -74,20 +72,8 @@ def build_model(combination, learning_rate):
                   metrics=['accuracy'])      
     return model
     
-#MLP network architecture
-def mlp(combination, model, activation):
-    model.add(tf.keras.layers.Flatten(input_shape=(28, 28)))
-    model.add(tf.keras.layers.Dense(512, activation=activation))
-    model.add(tf.keras.layers.Dense(256, activation=activation))
-    if combination == 4:
-        model.add(tf.keras.layers.Dense(128, activation=activation))
-    model.add(tf.keras.layers.Dropout(rate=0.2))
-    model.add(tf.keras.layers.Dense(10, activation=tf.nn.softmax))
-
-    return model
-
 #CNN network architecture
-def cnn(combination, model, activation):
+def network_one(combination, model, activation):
     model.add(tf.keras.layers.Conv2D(32, kernel_size=(3,3), 
                      activation=activation, 
                      input_shape=(28, 28, 1)))
@@ -103,6 +89,18 @@ def cnn(combination, model, activation):
     model.add(tf.keras.layers.Dense(10, activation=tf.nn.softmax))
     
     return model      
+
+#MLP network architecture
+def network_two(combination, model, activation):
+    model.add(tf.keras.layers.Flatten(input_shape=(28, 28)))
+    model.add(tf.keras.layers.Dense(512, activation=activation))
+    model.add(tf.keras.layers.Dense(256, activation=activation))
+    if combination == 4:
+        model.add(tf.keras.layers.Dense(128, activation=activation))
+    model.add(tf.keras.layers.Dropout(rate=0.2))
+    model.add(tf.keras.layers.Dense(10, activation=tf.nn.softmax))
+
+    return model
 
 #Method for restoring models
 def restore_model(checkpoint_path):
@@ -145,7 +143,7 @@ def check_param_is_int(param, value):
 # Combination 4: MLP with 3 hidden layers
 
 # Run a neural network with the given parameters
-#nn_network(1, 0.005, 10, 64, 12345)
+#network(1, 0.005, 10, 64, 12345)
 
 #Restore the specified model and check the test accuracy
 #checkpoint_path = "mnist-4-0.001-20-32-12345.ckpt"
@@ -167,4 +165,4 @@ if __name__ == "__main__":
     batches = check_param_is_int("batches", args.batches)
     seed = check_param_is_int("seed", args.seed)
 
-    nn_network(combination, learning_rate, epochs, batches, seed)
+    network(combination, learning_rate, epochs, batches, seed)
