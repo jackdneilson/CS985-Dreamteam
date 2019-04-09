@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c5256c9a-5238-4fb4-8c44-320a8c0a2842" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/news.py" beforeDir="false" afterPath="$PROJECT_DIR$/news.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/news_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/news_test.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -12,7 +13,7 @@
   </component>
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/CS985_Dreamteam$tensor_intro.coverage" NAME="tensor_intro Coverage Results" MODIFIED="1550587950310" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/lab_1_jack" />
-    <SUITE FILE_PATH="coverage/CS985_Dreamteam$news.coverage" NAME="news Coverage Results" MODIFIED="1554553706526" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/CS985_Dreamteam$news.coverage" NAME="news Coverage Results" MODIFIED="1554838261775" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CS985_Dreamteam$lab_1.coverage" NAME="lab_1 Coverage Results" MODIFIED="1550587861639" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/lab_1" />
     <SUITE FILE_PATH="coverage/CS985_Dreamteam$news_test.coverage" NAME="news_test Coverage Results" MODIFIED="1554835626771" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/CS985_Dreamteam$linear_regression.coverage" NAME="linear_regression Coverage Results" MODIFIED="1550588358605" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/lab_1_jack" />
@@ -20,13 +21,25 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/news_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="367">
-              <caret line="110" column="17" selection-start-line="110" selection-start-column="17" selection-end-line="110" selection-end-column="17" />
+            <state relative-caret-position="420">
+              <caret line="49" column="33" selection-start-line="49" selection-start-column="33" selection-end-line="49" selection-end-column="33" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/news.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="120">
+              <caret line="308" column="8" selection-start-line="308" selection-start-column="8" selection-end-line="308" selection-end-column="8" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -36,7 +49,7 @@
         <entry file="file://$PROJECT_DIR$/mnist.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="135">
-              <caret line="18" column="52" lean-forward="true" selection-start-line="18" selection-start-column="52" selection-end-line="18" selection-end-column="52" />
+              <caret line="18" column="52" selection-start-line="18" selection-start-column="52" selection-end-line="18" selection-end-column="52" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
@@ -48,7 +61,7 @@
         <entry file="file://$PROJECT_DIR$/news_nearlydone.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="411">
-              <caret line="248" column="43" lean-forward="true" selection-start-line="248" selection-start-column="43" selection-end-line="248" selection-end-column="43" />
+              <caret line="248" column="43" selection-start-line="248" selection-start-column="43" selection-end-line="248" selection-end-column="43" />
               <folding>
                 <element signature="e#0#47#0" expanded="true" />
               </folding>
@@ -68,6 +81,7 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>shape</find>
+      <find>Epoch 1/6</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -82,10 +96,10 @@
         <option value="$PROJECT_DIR$/src/lab_1_jack/linear_regression.py" />
         <option value="$PROJECT_DIR$/src/lab_1_jack/gradient_descent.py" />
         <option value="$PROJECT_DIR$/src/lab_1_jack/stochastic_gradient_descent.py" />
-        <option value="$PROJECT_DIR$/news.py" />
         <option value="$PROJECT_DIR$/src/news.py" />
         <option value="$PROJECT_DIR$/src/news_cnn.py" />
         <option value="$PROJECT_DIR$/src/news_test.py" />
+        <option value="$PROJECT_DIR$/news.py" />
       </list>
     </option>
   </component>
@@ -138,7 +152,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.news_test">
+  <component name="RunManager" selected="Python.news">
     <configuration name="gradient_descent" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="CS985-Dreamteam" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -197,7 +211,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/news.py" />
-      <option name="PARAMETERS" value="" />
+      <option name="PARAMETERS" value="2 0.00001 3 64 12345" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -258,8 +272,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.news_test" />
         <item itemvalue="Python.news" />
+        <item itemvalue="Python.news_test" />
         <item itemvalue="Python.gradient_descent" />
         <item itemvalue="Python.linear_regression" />
         <item itemvalue="Python.tensor_intro" />
@@ -280,23 +294,23 @@
       <workItem from="1554756169776" duration="2850000" />
       <workItem from="1554759368057" duration="29440000" />
       <workItem from="1554830197472" duration="2007000" />
-      <workItem from="1554832782807" duration="3125000" />
+      <workItem from="1554832782807" duration="5882000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="53591000" />
+    <option name="totallyTimeSpent" value="56348000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="27" width="1920" height="1053" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.16008538" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.17129135" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3286026" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.3286026" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -350,16 +364,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/news.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="606">
-          <caret line="139" column="66" lean-forward="true" selection-start-line="139" selection-start-column="66" selection-end-line="139" selection-end-column="66" />
-          <folding>
-            <element signature="e#0#47#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/news.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
@@ -402,7 +406,7 @@
     <entry file="file://$PROJECT_DIR$/news_nearlydone.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="411">
-          <caret line="248" column="43" lean-forward="true" selection-start-line="248" selection-start-column="43" selection-end-line="248" selection-end-column="43" />
+          <caret line="248" column="43" selection-start-line="248" selection-start-column="43" selection-end-line="248" selection-end-column="43" />
           <folding>
             <element signature="e#0#47#0" expanded="true" />
           </folding>
@@ -412,7 +416,7 @@
     <entry file="file://$PROJECT_DIR$/mnist.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="135">
-          <caret line="18" column="52" lean-forward="true" selection-start-line="18" selection-start-column="52" selection-end-line="18" selection-end-column="52" />
+          <caret line="18" column="52" selection-start-line="18" selection-start-column="52" selection-end-line="18" selection-end-column="52" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
           </folding>
@@ -421,10 +425,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/news_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="367">
-          <caret line="110" column="17" selection-start-line="110" selection-start-column="17" selection-end-line="110" selection-end-column="17" />
+        <state relative-caret-position="420">
+          <caret line="49" column="33" selection-start-line="49" selection-start-column="33" selection-end-line="49" selection-end-column="33" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/news.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="308" column="8" selection-start-line="308" selection-start-column="8" selection-end-line="308" selection-end-column="8" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>

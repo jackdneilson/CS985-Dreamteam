@@ -1,5 +1,4 @@
 import tensorflow as tf
-import matplotlib.pyplot as plt
 from datetime import datetime
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.model_selection import GridSearchCV
@@ -13,31 +12,6 @@ from keras.utils import to_categorical
 from keras.regularizers import l2
 
 tf.keras.backend.clear_session()
-
-plt.style.use('ggplot')
-
-
-def plot_history(history):
-    acc = history.history['acc']
-    val_acc = history.history['val_acc']
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
-    x = range(1, len(acc) + 1)
-
-    plt.figure(figsize=(12, 5))
-    plt.subplot(1, 2, 1)
-    plt.plot(x, acc, 'b', label='Training acc')
-    plt.plot(x, val_acc, 'r', label='Validation acc')
-    plt.title('Training and validation accuracy')
-    plt.legend()
-    plt.subplot(1, 2, 2)
-    plt.plot(x, loss, 'b', label='Training loss')
-    plt.plot(x, val_loss, 'r', label='Validation loss')
-    plt.title('Training and validation loss')
-    plt.legend()
-    plt.show()
-
-
 tf.logging.set_verbosity(tf.logging.INFO)
 
 LEARNING_RATE = 0.00001
@@ -73,7 +47,7 @@ vocab_size = len(tokenizer.word_index) + 1
 
 
 # Define the Convolutional Neural Network model
-def create_model(learning_rate=0.00001, feature_maps=32, kernel_size=6, weight_decay_rate=0.0001, init_mode='uniform'):
+def create_model(learning_rate=0.01, feature_maps=32, kernel_size=6, weight_decay_rate=0.0001, init_mode='glorot_normal'):
     model = Sequential()
     model.add(Embedding(vocab_size, 128))
     model.add(SpatialDropout1D(0.2))
@@ -116,14 +90,14 @@ cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_o
 now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
 tensorboard = tf.keras.callbacks.TensorBoard(log_dir="./logs/run-{}".format(now), write_graph=True, update_freq="batch")
 
-# model = create_model()
-# history = model.fit(x_train,
-#                     y_train,
-#                     validation_data=(x_val, y_val),
-#                     epochs=NO_EPOCHS,
-#                     batch_size=BATCH_SIZE,
-#                     callbacks=[cp_callback, tensorboard])
-# loss, accuracy = model.evaluate(x_test, y_test, batch_size=BATCH_SIZE, verbose=0)
-# plot_history(history)
-# print("Test Loss: " + str(loss))
-# print("Test Accuracy: " + str(accuracy))
+# Create the model, then fit to the data and evaluate
+model = create_model()
+model.fit(x_train,
+          y_train,
+          validation_data=(x_val, y_val),
+          epochs=NO_EPOCHS,
+          batch_size=BATCH_SIZE,
+          callbacks=[cp_callback, tensorboard])
+loss, accuracy = model.evaluate(x_test, y_test, batch_size=BATCH_SIZE, verbose=0)
+print("Test Loss: " + str(loss))
+print("Test Accuracy: " + str(accuracy))
