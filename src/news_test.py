@@ -1,15 +1,49 @@
 import tensorflow as tf
 import numpy as np
+import matplotlib.pyplot as plt
+import math
 from sklearn.datasets import fetch_20newsgroups
-from sklearn.feature_extraction.text import TfidfVectorizer
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Conv1D, Embedding, GlobalMaxPooling1D, MaxPooling1D, Dropout, SpatialDropout1D, AveragePooling1D, GlobalAveragePooling1D
 from keras.optimizers import SGD
 from keras.utils import to_categorical
+from keras.regularizers import l2
+
+# Clear session (helps with some OOM errors)
+tf.keras.backend.clear_session()
+
+plt.style.use('ggplot')
+
+
+def plot_history(history):
+    acc = history.history['acc']
+    val_acc = history.history['val_acc']
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    x = range(1, len(acc) + 1)
+
+    plt.figure(figsize=(12, 5))
+    plt.subplot(1, 2, 1)
+    plt.plot(x, acc, 'b', label='Training acc')
+    plt.plot(x, val_acc, 'r', label='Validation acc')
+    plt.title('Training and validation accuracy')
+    plt.legend()
+    plt.subplot(1, 2, 2)
+    plt.plot(x, loss, 'b', label='Training loss')
+    plt.plot(x, val_loss, 'r', label='Validation loss')
+    plt.title('Training and validation loss')
+    plt.legend()
+    plt.show()
+
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.00001
+MAX_LENGTH = 200
+NO_EPOCHS = 10
+BATCH_SIZE = 128
 
 # Fetch the dataset
 news_train = fetch_20newsgroups(subset='train', shuffle=True)
@@ -17,25 +51,32 @@ news_test = fetch_20newsgroups(subset='test', shuffle=True)
 
 categories = range(0, 20)
 
-tfidf_vec = TfidfVectorizer(use_idf=True)
-x_train_idf = tfidf_vec.fit_transform(news_train.data)
-#x_test_idf = tfidf_vec.fit_transform(news_test.data)
+# Tokenize the input to be sequences of words, then pad to a max length
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts(news_train.data)
+x_train = tokenizer.texts_to_sequences(news_train.data)
+x_train = pad_sequences(x_train, maxlen=MAX_LENGTH, padding='post')
+x_test = tokenizer.texts_to_sequences(news_test.data)
+x_test = pad_sequences(x_test, maxlen=MAX_LENGTH, padding='post')
 y_train, y_test = news_train.target, news_test.target
 y_train = to_categorical(y_train, len(categories))
 y_test = to_categorical(y_test, len(categories))
+vocab_size = len(tokenizer.word_index) + 1
 
-print(x_train_idf.shape)
-print(x_train_idf.shape[0])
-print(y_train.shape)
-print(y_train[0].shape)
-print(len(tfidf_vec.vocabulary_))
 
-# Define the Neural Network model
-# int(1.5 * len(tfidf_vec.vocabulary_))
+# Define the Convolutional Neural Network model
 model = Sequential()
-model.add(Dense(100, activation='relu', input_dim=len(tfidf_vec.vocabulary_)))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(50, activation='relu'))
+model.add(Embedding(vocab_size, 64))
+model.add(SpatialDropout1D(0.5))
+model.add(Conv1D(32, activation='relu', kernel_size=6, kernel_regularizer=l2(0.0001)))
+model.add(GlobalAveragePooling1D())
+# model.add(SpatialDropout1D(0.5))
+# model.add(Conv1D(64, activation='relu', kernel_size=8, kernel_regularizer=l2(0.0001)))
+# model.add(GlobalMaxPooling1D())
+# model.add(Dropout(0.5))
+# model.add(Dense(30, activation='relu', kernel_regularizer=l2(0.00001)))
+# model.add(Dropout(0.5))
+# model.add(Dense(30, activation='relu', kernel_regularizer=l2(0.00001)))
 model.add(Dense(20, name='output', activation='softmax'))
 
 # Define the optimizer for the model
@@ -43,26 +84,12 @@ sgd_opt = SGD(lr=LEARNING_RATE)
 
 # Compile the model
 model.compile(
-    optimizer='SGD',
+    optimizer='adam',
     loss='categorical_crossentropy',
-    metrics=['accuracy']
+    metrics=['acc']
 )
 
 print(model.summary())
 
-# The data is far too large to fit into memory, so define a generator to yield smaller chunks
-def generator(features, labels, batch_size):
-    for i in range(features.shape[0]):
-        yield features[i:i + 1, ].todense(), labels[i:i + 1, ]
-
-
-# Fit the model to the training data
-model.fit_generator(
-    generator(x_train_idf, y_train, 1),
-    epochs=32,
-    steps_per_epoch=x_train_idf.shape[0])
-
-
-#model.fit(x_train_idf, y_train, epochs=1, verbose=1, batch_size=10)
-
-
+history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=NO_EPOCHS, batch_size=BATCH_SIZE)
+plot_history(history)
