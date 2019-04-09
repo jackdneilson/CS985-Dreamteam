@@ -73,13 +73,17 @@ vocab_size = len(tokenizer.word_index) + 1
 
 
 # Define the Convolutional Neural Network model
-def create_model(learning_rate=0.00001, feature_maps=32, kernel_size=6, weight_decay_rate=0.0001):
+def create_model(learning_rate=0.00001, feature_maps=32, kernel_size=6, weight_decay_rate=0.0001, init_mode='uniform'):
     model = Sequential()
     model.add(Embedding(vocab_size, 128))
     model.add(SpatialDropout1D(0.2))
-    model.add(Conv1D(feature_maps, activation='relu', kernel_size=kernel_size, kernel_regularizer=l2(weight_decay_rate)))
+    model.add(Conv1D(feature_maps,
+                     activation='relu',
+                     kernel_size=kernel_size,
+                     kernel_regularizer=l2(weight_decay_rate),
+                     kernel_initializer=init_mode))
     model.add(GlobalAveragePooling1D())
-    model.add(Dense(20, name='output', activation='softmax'))
+    model.add(Dense(20, name='output', activation='softmax', kernel_initializer=init_mode))
 
     opt = Adam(lr=learning_rate)
 
@@ -93,18 +97,18 @@ def create_model(learning_rate=0.00001, feature_maps=32, kernel_size=6, weight_d
 
 
 # Grid search for the best combinations of hyperparameters
-learning_rates = [0.1, 0.01, 0.001, 0.0001, 0.00001]
-epochs = range(12)
-batches = [32, 64, 128, 256]
-init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
-model = KerasClassifier(build_fn=create_model, epochs=6, batch_size=256, verbose=1)
-param_grid = dict(learning_rate=learning_rates)
-grid = GridSearchCV(estimator=model, param_grid=param_grid, n_jobs=1)
-
-x_search = pad_sequences(tokenizer.texts_to_sequences(news.data), maxlen=MAX_LENGTH, padding='post')
-y_search = to_categorical(news.target, len(categories))
-grid_result = grid.fit(x_search, y_search)
-print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+# learning_rates = [0.1, 0.01, 0.001, 0.0001, 0.00001]
+# epochs = range(12)
+# batches = [32, 64, 128, 256]
+# init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
+# model = KerasClassifier(build_fn=create_model, epochs=6, batch_size=256, verbose=1)
+# param_grid = dict(init_mode=init_mode)
+# grid = GridSearchCV(estimator=model, param_grid=param_grid, n_jobs=1)
+#
+# x_search = pad_sequences(tokenizer.texts_to_sequences(news.data), maxlen=MAX_LENGTH, padding='post')
+# y_search = to_categorical(news.target, len(categories))
+# grid_result = grid.fit(x_search, y_search)
+# print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
 
 # Define callback functions to save a checkpoint after training as well as tensorboard logs
 checkpoint_path = "news-{}-{}-{}-{}-{}.ckpt".format(2, LEARNING_RATE, NO_EPOCHS, BATCH_SIZE, SEED)
