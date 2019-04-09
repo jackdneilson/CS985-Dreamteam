@@ -44,8 +44,8 @@ def network_one(learning_rate, epochs, batches):
 
     # hyper-parameters
     # learning_rate = 0.001
-    num_epochs = epochs
-    batch_size = batches
+    num_epochs = int(epochs)
+    batch_size = int(batches)
     keep_prob = 0.5
 
     # Network sizes
