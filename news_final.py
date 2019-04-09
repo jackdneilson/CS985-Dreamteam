@@ -5,16 +5,18 @@ import tensorflow as tf
 import numpy as np
 from datetime import datetime
 
-def network_one(learning_rate, epochs, batches):
+def network_one(learning_rate, epochs, batches, seed=12345):
     """ A fully connected feed forward network with one hidden layer and softmax output"""
-    seed = 12345  # seeds
+    # seed = 12345  # seeds
     dict_size = 12500  # size of dictionary for tfidf tokenization
     min_epochs = 2  # for early stoppage, so we don't exit before adequate training
-    tf.set_random_seed(seed)
-    np.random.seed(seed)
-    checkpoint_path = "news-{}-{}-{}-{}-{}.ckpt".format(combination,learning_rate,epochs,batches,seed)
+    # tf.set_random_seed(seed)
+    # np.random.seed(seed)
+    checkpoint_path = "news-{}-{}-{}-{}-{}.ckpt".format(int(combination), learning_rate, int(epochs), int(batches),
+                                                        int(seed))
 
     news = fetch_20newsgroups(subset='all', random_state=seed)  # fetching the full dataset
+    # news = fetch_20newsgroups(subset='all')  # fetching the full dataset
 
     categories = range(0, 20)  # so we can switch between full and subsets
 
@@ -249,7 +251,11 @@ def network_two(learning_rate, epochs, batches):
 def main(combination, learning_rate, epochs, batches, seed):
 
     # Set Seed
+    seed = np.int(seed)
+    tf.set_random_seed(seed)
+    np.random.seed(seed)
     print("Seed: {}".format(seed))
+
 
     if int(combination)==1:
         network_one(learning_rate, epochs, batches)
