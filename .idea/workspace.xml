@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c5256c9a-5238-4fb4-8c44-320a8c0a2842" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/news.py" beforeDir="false" afterPath="$PROJECT_DIR$/news.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/news_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/news_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -20,56 +19,7 @@
     <SUITE FILE_PATH="coverage/CS985_Dreamteam$gradient_descent.coverage" NAME="gradient_descent Coverage Results" MODIFIED="1550588842004" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/lab_1_jack" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/news_test.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="420">
-              <caret line="49" column="33" selection-start-line="49" selection-start-column="33" selection-end-line="49" selection-end-column="33" />
-              <folding>
-                <element signature="e#0#23#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/news.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
-              <caret line="308" column="8" selection-start-line="308" selection-start-column="8" selection-end-line="308" selection-end-column="8" />
-              <folding>
-                <element signature="e#0#9#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/mnist.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="18" column="52" selection-start-line="18" selection-start-column="52" selection-end-line="18" selection-end-column="52" />
-              <folding>
-                <element signature="e#0#64#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/news_nearlydone.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="411">
-              <caret line="248" column="43" selection-start-line="248" selection-start-column="43" selection-end-line="248" selection-end-column="43" />
-              <folding>
-                <element signature="e#0#47#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -120,6 +70,17 @@
             <path>
               <item name="CS985-Dreamteam" type="b2602c69:ProjectViewProjectNode" />
               <item name="CS985-Dreamteam" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="CS985-Dreamteam" type="b2602c69:ProjectViewProjectNode" />
+              <item name="CS985-Dreamteam" type="462c0819:PsiDirectoryNode" />
+              <item name="mnist-data" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="CS985-Dreamteam" type="b2602c69:ProjectViewProjectNode" />
+              <item name="CS985-Dreamteam" type="462c0819:PsiDirectoryNode" />
+              <item name="mnist-data" type="462c0819:PsiDirectoryNode" />
+              <item name="mnist-saved-models" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="CS985-Dreamteam" type="b2602c69:ProjectViewProjectNode" />
@@ -294,23 +255,22 @@
       <workItem from="1554756169776" duration="2850000" />
       <workItem from="1554759368057" duration="29440000" />
       <workItem from="1554830197472" duration="2007000" />
-      <workItem from="1554832782807" duration="5882000" />
+      <workItem from="1554832782807" duration="6480000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="56348000" />
+    <option name="totallyTimeSpent" value="56946000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="27" width="1920" height="1053" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.17129135" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.3244397" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.3286026" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.3286026" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -435,7 +395,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/news.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
+        <state relative-caret-position="4620">
           <caret line="308" column="8" selection-start-line="308" selection-start-column="8" selection-end-line="308" selection-end-column="8" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
